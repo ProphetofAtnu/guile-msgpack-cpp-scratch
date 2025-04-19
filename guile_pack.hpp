@@ -278,7 +278,7 @@ template <> struct GuilePacker<guile_type::keyword> {
 };
 
 // TODO: Implement packer for array using scm_array_get_handle
-// TODO: Implement packer for array using [scm_array_get_handle]
+// TODO: Handle homogenous arrays with inline functions in libguile/array_handle.h
 
 template <typename T>
 inline void packDispatch(SCM value, guile_object::guile_type guile_t,
