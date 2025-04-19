@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/msgpack/msgpack-c.git
+revision = cpp-7.0.0
+depth = 1
+method = cmake
+
+[provide]
+msgpack-cxx = msgpack_cxx_dep
