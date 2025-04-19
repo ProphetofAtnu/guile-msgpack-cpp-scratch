@@ -1,16 +1,15 @@
 #include "guile_object.hpp"
 #include "guile_pack.hpp"
-#include <deque>
 #include <iostream>
-#include <memory>
 #include <msgpack.hpp>
 #include <sys/types.h>
 
-static msgpack::sbuffer packScm(SCM value) {
+static msgpack::sbuffer packScm(SCM value, uint64_t flags) {
   msgpack::sbuffer buf;
   msgpack::packer<msgpack::sbuffer> packer(buf);
 
-  guile_pack::packDispatch(value, guile_object::guile_type_of(value), packer);
+  guile_pack::packDispatch(value, guile_object::guile_type_of(value), packer,
+                           flags);
 
   return buf;
 }
@@ -23,7 +22,7 @@ static void debugMpack(const msgpack::sbuffer &buffer) {
             << std::endl;
 }
 
-static void dumpScm(std::string ident, SCM v) {
+static void dumpScm(std::string ident, SCM v, uint64_t flags = 0) {
   // clang-format off
   std::cout
     << std::hex
@@ -43,7 +42,7 @@ static void dumpScm(std::string ident, SCM v) {
     // clang-format on
   }
   std::cout << "\nMpack output ";
-  debugMpack(packScm(v));
+  debugMpack(packScm(v, flags));
   std::cout << "\n" << std::endl;
 }
 
@@ -62,7 +61,8 @@ int main(int argc, char **argv) {
   dumpScm("CONS (#f 345)", scm_cons(SCM_BOOL_F, scm_from_int(345)));
   dumpScm("CONS", scm_c_eval_string("'(1 2)"));
   dumpScm("STRING", scm_from_utf8_string("THIS IS A TEST"));
-
+  dumpScm("KEYWORD", scm_c_eval_string("#:test"));
+  dumpScm("symbol", scm_c_eval_string("'test"));
   dumpScm("HASHTABLE", scm_c_eval_string(R"END(
 (let ((ht (make-hash-table)))
   (hash-set! ht "test" 1)
@@ -71,5 +71,11 @@ int main(int argc, char **argv) {
   ht)
 )END"));
 
+  dumpScm("INVALID", scm_current_output_port(),
+          guile_pack::pack_flags::override_unknowns |
+              guile_pack::pack_flags::unknown_is_nil);
+  // dumpScm("INVALID", scm_current_output_port(),
+  //         static_cast<uint64_t>(guile_pack::pack_flags::unknown_is_panic) |
+  //             static_cast<uint64_t>(guile_pack::pack_flags::override_unknowns));
   return 0;
 }
