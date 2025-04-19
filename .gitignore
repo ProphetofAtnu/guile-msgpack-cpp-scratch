@@ -1,4 +1,6 @@
 build
+buildDir
 subprojects/msgpack-cxx/
 .cache
+.idea
 

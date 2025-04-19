@@ -3,9 +3,10 @@
 #include <string_view>
 
 #define SCM_DEBUG_TYPING_STRICTNESS 0
+
 #include <libguile.h>
 
-#define GOBJ_CASE_OF(e) static_cast<unsigned char>(e)
+#define GUILE_OBJ_CASE_OF(e) static_cast<unsigned char>(e)
 
 namespace guile_object {
 
@@ -82,14 +83,14 @@ enum class immediate_type { not_immediate, small_int, other, invalid };
 constexpr immediate_type immediate_type_of(SCM v) noexcept {
   switch (SCM_ITAG3(v)) {
 
-  case GOBJ_CASE_OF(tc3::heap_object):
+  case GUILE_OBJ_CASE_OF(tc3::heap_object):
     return immediate_type::not_immediate;
 
-  case GOBJ_CASE_OF(tc3::even_small_int):
-  case GOBJ_CASE_OF(tc3::odd_small_int):
+  case GUILE_OBJ_CASE_OF(tc3::even_small_int):
+  case GUILE_OBJ_CASE_OF(tc3::odd_small_int):
     return immediate_type::small_int;
 
-  case GOBJ_CASE_OF(tc3::non_int_immediate):
+  case GUILE_OBJ_CASE_OF(tc3::non_int_immediate):
     return immediate_type::other;
   default:
     return immediate_type::invalid;
@@ -108,26 +109,26 @@ enum class heap_tc3_type {
 
 inline heap_tc3_type heap_tc3_type_of(SCM v) noexcept {
   switch (SCM_TYP3(v)) {
-  case GOBJ_CASE_OF(heap_tc3::heap_cons):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons):
     return heap_tc3_type::pair_heap_car;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_struct):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_struct):
     return heap_tc3_type::struct_object;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_even_int):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_even_int):
     return heap_tc3_type::pair_even_int;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_closure):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_closure):
     return heap_tc3_type::closure;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_imm_other):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_imm_other):
     return heap_tc3_type::pair_other_immediate;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_odd_int):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_odd_int):
     return heap_tc3_type::pair_odd_int;
 
-    // case GOBJ_CASE_OF(heap_tc3::heap_object):
-    // case GOBJ_CASE_OF(heap_tc3::heap_object2):
+  // case GOBJ_CASE_OF(heap_tc3::heap_object):
+  // case GOBJ_CASE_OF(heap_tc3::heap_object2):
   default:
     return heap_tc3_type::other_heap;
   }
@@ -209,102 +210,102 @@ inline heap_type heap_type_of(SCM v) noexcept {
 
   // TC3 in cell
   switch (0b00000111 & cellType) {
-  case GOBJ_CASE_OF(heap_tc3::heap_cons):
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_even_int):
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_imm_other):
-  case GOBJ_CASE_OF(heap_tc3::heap_cons_odd_int):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_even_int):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_imm_other):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_cons_odd_int):
     return heap_type::pair;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_struct):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_struct):
     return heap_type::struct_scm;
 
-  case GOBJ_CASE_OF(heap_tc3::heap_closure):
+  case GUILE_OBJ_CASE_OF(heap_tc3::heap_closure):
     return heap_type::closure;
 
   default:
     switch (0b01111111 & cellType) {
-    case GOBJ_CASE_OF(tc7::symbol):
+    case GUILE_OBJ_CASE_OF(tc7::symbol):
       return heap_type::symbol;
 
-    case GOBJ_CASE_OF(tc7::variable):
+    case GUILE_OBJ_CASE_OF(tc7::variable):
       return heap_type::variable;
 
-    case GOBJ_CASE_OF(tc7::vector):
+    case GUILE_OBJ_CASE_OF(tc7::vector):
       return heap_type::vector;
 
-    case GOBJ_CASE_OF(tc7::wvect):
+    case GUILE_OBJ_CASE_OF(tc7::wvect):
       return heap_type::wvect;
 
-    case GOBJ_CASE_OF(tc7::string):
+    case GUILE_OBJ_CASE_OF(tc7::string):
       return heap_type::string;
 
-    case GOBJ_CASE_OF(tc7::number):
+    case GUILE_OBJ_CASE_OF(tc7::number):
       return heap_type::number;
 
-    case GOBJ_CASE_OF(tc7::hashtable):
+    case GUILE_OBJ_CASE_OF(tc7::hashtable):
       return heap_type::hashtable;
 
-    case GOBJ_CASE_OF(tc7::pointer):
+    case GUILE_OBJ_CASE_OF(tc7::pointer):
       return heap_type::pointer;
 
-    case GOBJ_CASE_OF(tc7::fluid):
+    case GUILE_OBJ_CASE_OF(tc7::fluid):
       return heap_type::fluid;
 
-    case GOBJ_CASE_OF(tc7::stringbuf):
+    case GUILE_OBJ_CASE_OF(tc7::stringbuf):
       return heap_type::stringbuf;
 
-    case GOBJ_CASE_OF(tc7::dynamic_state):
+    case GUILE_OBJ_CASE_OF(tc7::dynamic_state):
       return heap_type::dynamic_state;
 
-    case GOBJ_CASE_OF(tc7::frame):
+    case GUILE_OBJ_CASE_OF(tc7::frame):
       return heap_type::frame;
 
-    case GOBJ_CASE_OF(tc7::keyword):
+    case GUILE_OBJ_CASE_OF(tc7::keyword):
       return heap_type::keyword;
 
-    case GOBJ_CASE_OF(tc7::atomic_box):
+    case GUILE_OBJ_CASE_OF(tc7::atomic_box):
       return heap_type::atomic_box;
 
-    case GOBJ_CASE_OF(tc7::syntax):
+    case GUILE_OBJ_CASE_OF(tc7::syntax):
       return heap_type::syntax;
 
-    case GOBJ_CASE_OF(tc7::values):
+    case GUILE_OBJ_CASE_OF(tc7::values):
       return heap_type::values;
 
-    case GOBJ_CASE_OF(tc7::program):
+    case GUILE_OBJ_CASE_OF(tc7::program):
       return heap_type::program;
 
-    case GOBJ_CASE_OF(tc7::vm_cont):
+    case GUILE_OBJ_CASE_OF(tc7::vm_cont):
       return heap_type::vm_cont;
 
-    case GOBJ_CASE_OF(tc7::bytevector):
+    case GUILE_OBJ_CASE_OF(tc7::bytevector):
       return heap_type::bytevector;
 
-    case GOBJ_CASE_OF(tc7::weak_set):
+    case GUILE_OBJ_CASE_OF(tc7::weak_set):
       return heap_type::weak_set;
 
-    case GOBJ_CASE_OF(tc7::weak_table):
+    case GUILE_OBJ_CASE_OF(tc7::weak_table):
       return heap_type::weak_table;
 
-    case GOBJ_CASE_OF(tc7::array):
+    case GUILE_OBJ_CASE_OF(tc7::array):
       return heap_type::array;
 
-    case GOBJ_CASE_OF(tc7::bitvector):
+    case GUILE_OBJ_CASE_OF(tc7::bitvector):
       return heap_type::bitvector;
 
-    case GOBJ_CASE_OF(tc7::smob):
+    case GUILE_OBJ_CASE_OF(tc7::smob):
       return heap_type::smob;
 
-    case GOBJ_CASE_OF(tc7::port):
+    case GUILE_OBJ_CASE_OF(tc7::port):
       return heap_type::port;
 
-    case GOBJ_CASE_OF(tc7::unused_4f):
-    case GOBJ_CASE_OF(tc7::unused_65):
-    case GOBJ_CASE_OF(tc7::unused_67):
-    case GOBJ_CASE_OF(tc7::unused_6d):
-    case GOBJ_CASE_OF(tc7::unused_6f):
-    case GOBJ_CASE_OF(tc7::unused_75):
-    case GOBJ_CASE_OF(tc7::unused_7f):
+    case GUILE_OBJ_CASE_OF(tc7::unused_4f):
+    case GUILE_OBJ_CASE_OF(tc7::unused_65):
+    case GUILE_OBJ_CASE_OF(tc7::unused_67):
+    case GUILE_OBJ_CASE_OF(tc7::unused_6d):
+    case GUILE_OBJ_CASE_OF(tc7::unused_6f):
+    case GUILE_OBJ_CASE_OF(tc7::unused_75):
+    case GUILE_OBJ_CASE_OF(tc7::unused_7f):
       return heap_type::unused;
     }
   }
@@ -463,8 +464,31 @@ inline guile_type guile_type_of(SCM v) noexcept {
   return guile_type::invalid;
 }
 
+class SCMLazyTyped {
 
+public:
+  constexpr SCMLazyTyped(SCM val) noexcept : value_(val) {};
+
+  constexpr SCM value() const & noexcept { return value_; }
+  constexpr guile_object::guile_type type() const & noexcept {
+    return do_resolve();
+  }
+
+private:
+  inline guile_object::guile_type do_resolve() const {
+    if (!has_resolved) {
+      has_resolved = true;
+      typ_ = guile_object::guile_type_of(value_);
+    }
+
+    return typ_;
+  }
+
+  SCM value_;
+  mutable bool has_resolved = false;
+  mutable guile_object::guile_type typ_ = guile_object::guile_type::unspecified;
+};
 
 }; // namespace guile_object
 
-#undef GOBJ_CASE_OF
+#undef GUILE_OBJ_CASE_OF
