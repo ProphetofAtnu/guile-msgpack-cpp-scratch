@@ -1,6 +1,10 @@
 #pragma once
 
 #include "guile_object.hpp"
+#include "guile_shared.hpp"
+#include "libguile/numbers.h"
+#include "libguile/pairs.h"
+#include "libguile/symbols.h"
 #include <iostream>
 #include <msgpack.hpp>
 #include <type_traits>
@@ -12,6 +16,27 @@ using object_handle_t = const msgpack::object;
 using flags_t = uint64_t;
 using scm_t = SCM;
 inline scm_t unpackDispatch(object_handle_t &object, flags_t flags);
+
+enum class unpack_flags : uint64_t {
+  disable_symbol_extension = 1 << 0,
+  disable_keyword_extension = 1 << 1,
+};
+
+constexpr uint64_t operator&(unpack_flags lhs, unpack_flags rhs) noexcept {
+  return static_cast<uint64_t>(lhs) & static_cast<uint64_t>(rhs);
+}
+
+constexpr uint64_t operator&(uint64_t lhs, unpack_flags rhs) noexcept {
+  return lhs & static_cast<uint64_t>(rhs);
+}
+
+constexpr uint64_t operator|(unpack_flags lhs, unpack_flags rhs) noexcept {
+  return static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs);
+}
+
+constexpr uint64_t operator|(uint64_t lhs, unpack_flags rhs) noexcept {
+  return lhs | static_cast<uint64_t>(rhs);
+}
 
 template <msgpack::type::object_type T> struct GuileUnpacker : std::false_type {
   static inline scm_t unpack(object_handle_t &handle, flags_t flags) {
@@ -125,7 +150,6 @@ struct GuileUnpacker<msgpack::type::object_type::MAP> : std::true_type {
     assert(handle.type == msgpack::type::object_type::MAP);
     auto data = handle.via.map;
     scm_t result = scm_c_make_hash_table(data.size);
-    std::cout << "MAP SIZE " << data.size << std::endl;
     for (uint32_t i = 0; i < data.size; i++) {
       scm_hash_set_x(result, unpackDispatch(data.ptr[i].key, flags),
                      unpackDispatch(data.ptr[i].val, flags));
@@ -139,7 +163,29 @@ template <>
 struct GuileUnpacker<msgpack::type::object_type::EXT> : std::true_type {
   static inline scm_t unpack(object_handle_t &handle, flags_t flags) {
     assert(handle.type == msgpack::type::object_type::EXT);
-    throw new unpack_error("cannot unpack object of unknown type");
+    auto data = handle.via.ext;
+
+    switch (data.type()) {
+    case guile_shared::symbol_ext_id:
+      if ((flags & unpack_flags::disable_symbol_extension) == 0) {
+        return scm_string_to_symbol(scm_from_utf8_stringn(data.data(), data.size));
+      } else {
+        return scm_from_utf8_stringn(data.data(), data.size);
+      }
+    case guile_shared::keyword_ext_id:
+      if ((flags & unpack_flags::disable_symbol_extension) == 0) {
+        return scm_symbol_to_keyword(
+            scm_string_to_symbol(scm_from_utf8_stringn(data.data(), data.size)));
+      } else {
+        return scm_from_utf8_stringn(data.data(), data.size);
+      }
+    case guile_shared::nil_ext_id:
+      return SCM_EOL;
+    default:
+      scm_t bvec = scm_c_make_bytevector(data.size);
+      memcpy(SCM_BYTEVECTOR_CONTENTS(bvec), data.ptr, data.size);
+      return scm_cons(scm_from_int8(data.type()), bvec);
+    }
   }
 };
 

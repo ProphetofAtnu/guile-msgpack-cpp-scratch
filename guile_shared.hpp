@@ -18,6 +18,10 @@ struct malloc_deleter {
 };
 
 } // namespace detail
+  //
+constexpr const int8_t nil_ext_id = GUILE_PACK_EXT_ID_START;
+constexpr const int8_t symbol_ext_id = GUILE_PACK_EXT_ID_START + 1;
+constexpr const int8_t keyword_ext_id = GUILE_PACK_EXT_ID_START + 2;
 
 [[noreturn]] inline void panic() { std::exit(1); }
 

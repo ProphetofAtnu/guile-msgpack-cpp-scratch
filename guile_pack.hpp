@@ -13,10 +13,6 @@ namespace guile_pack {
 using pack_error = std::runtime_error;
 namespace detail = guile_shared::detail;
 
-constexpr const int8_t nil_ext_id = GUILE_PACK_EXT_ID_START;
-constexpr const int8_t symbol_ext_id = GUILE_PACK_EXT_ID_START + 1;
-constexpr const int8_t keyword_ext_id = GUILE_PACK_EXT_ID_START + 2;
-
 using guile_type = guile_object::guile_type;
 
 using flags_type = uint64_t;
@@ -207,7 +203,7 @@ template <> struct GuilePacker<guile_type::symbol> {
     obuf.reset(scm_to_utf8_stringn(sv, &len));
 
     if ((flags & pack_flags::disable_symbol_extension) == 0) {
-      packer.pack_ext(len, symbol_ext_id);
+      packer.pack_ext(len, guile_shared::symbol_ext_id);
       packer.pack_ext_body(obuf.get(), len);
     } else {
       packer.pack_str(len);
@@ -227,7 +223,7 @@ template <> struct GuilePacker<guile_type::keyword> {
     obuf.reset(scm_to_utf8_stringn(sv, &len));
 
     if ((flags & pack_flags::disable_keyword_extension) == 0) {
-      packer.pack_ext(len, keyword_ext_id);
+      packer.pack_ext(len, guile_shared::keyword_ext_id);
       packer.pack_ext_body(obuf.get(), len);
     } else {
       packer.pack_str(len);

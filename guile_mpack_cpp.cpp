@@ -1,7 +1,6 @@
 #include "guile_object.hpp"
 #include "guile_pack.hpp"
 #include "guile_unpack.hpp"
-#include "msgpack/v3/object_fwd_decl.hpp"
 #include <iostream>
 #include <msgpack.hpp>
 #include <sys/types.h>
@@ -20,15 +19,13 @@ static void debugMpack(const msgpack::sbuffer &buffer) {
   msgpack::object_handle result;
   msgpack::unpack(result, buffer.data(), buffer.size());
   auto ob = result.get();
-  std::cout << "OBJ: " << ob << "|TYP: " << guile_pack::display(ob.type)
+  std::cout << "OBJ: " << ob << "|TYP: " << guile_shared::display(ob.type)
             << std::endl;
 
   // TODO
-  if (ob.type != msgpack::type::EXT) {
-    auto v = guile_unpack::unpackDispatch(result.get(), 0);
+  auto v = guile_unpack::unpackDispatch(result.get(), 0);
 
-    scm_write(v, scm_current_output_port());
-  }
+  scm_write(v, scm_current_output_port());
 }
 
 static void dumpScm(std::string ident, SCM v, uint64_t flags = 0) {
