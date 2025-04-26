@@ -1,62 +1,21 @@
 #pragma once
 
 #include "guile_object.hpp"
+#include "guile_shared.hpp"
 #include <cstdlib>
 #include <stdexcept>
 
 #include <msgpack.hpp>
 
-// For control over the dialect of msgpack.
-// Override if guile extension types collide with other custom type.
-#ifndef GUILE_PACK_EXT_ID_START
-#define GUILE_PACK_EXT_ID_START 100
-#endif // !GUILE_PACK_EXT_ID_START
-
 namespace guile_pack {
-
-[[noreturn]] inline void panic() { std::exit(1); }
 
 // TODO: Replace with actual error type.
 using pack_error = std::runtime_error;
-
-namespace detail {
-
-struct malloc_deleter {
-  void operator()(char *v) noexcept { ::free(v); }
-};
-
-} // namespace detail
+namespace detail = guile_shared::detail;
 
 constexpr const int8_t nil_ext_id = GUILE_PACK_EXT_ID_START;
 constexpr const int8_t symbol_ext_id = GUILE_PACK_EXT_ID_START + 1;
 constexpr const int8_t keyword_ext_id = GUILE_PACK_EXT_ID_START + 2;
-
-inline std::string_view display(msgpack::type::object_type typ) {
-  switch (typ) {
-  case msgpack::type::object_type::NIL:
-    return "NIL";
-  case msgpack::type::object_type::BOOLEAN:
-    return "BOOLEAN";
-  case msgpack::type::object_type::POSITIVE_INTEGER:
-    return "POSITIVE_INTEGER";
-  case msgpack::type::object_type::NEGATIVE_INTEGER:
-    return "NEGATIVE_INTEGER";
-  case msgpack::type::object_type::FLOAT32:
-    return "FLOAT32";
-  case msgpack::type::object_type::FLOAT64:
-    return "FLOAT64";
-  case msgpack::type::object_type::STR:
-    return "STR";
-  case msgpack::type::object_type::BIN:
-    return "BIN";
-  case msgpack::type::object_type::ARRAY:
-    return "ARRAY";
-  case msgpack::type::object_type::MAP:
-    return "MAP";
-  case msgpack::type::object_type::EXT:
-    return "EXT";
-  }
-}
 
 using guile_type = guile_object::guile_type;
 
@@ -104,7 +63,7 @@ template <guile_type GT> struct GuilePacker : std::false_type {
       if ((flags & pack_flags::unknown_is_nil) != 0) {
         packer.pack_nil();
       } else if ((flags & pack_flags::unknown_is_panic) != 0) {
-        panic();
+        guile_shared::panic();
       }
     }
   }
@@ -278,7 +237,8 @@ template <> struct GuilePacker<guile_type::keyword> {
 };
 
 // TODO: Implement packer for array using scm_array_get_handle
-// TODO: Handle homogenous arrays with inline functions in libguile/array_handle.h
+// TODO: Handle homogenous arrays with inline functions in
+// libguile/array_handle.h
 
 template <typename T>
 inline void packDispatch(SCM value, guile_object::guile_type guile_t,

@@ -3,12 +3,12 @@ project('guile-mpack-cpp', 'cpp',
   default_options : ['warning_level=3',
                      'cpp_std=c++20'])
 
-msgpack_dep = dependency('msgpack-cxx')
+msgpackdep = dependency('msgpack-cxx')
 guiledep = dependency('guile-3.0')
 boostdep = dependency('boost')
 
 exe = executable('guile-mpack-cpp', 'guile_mpack_cpp.cpp',
   install : true,
-  dependencies: [boostdep, msgpack_dep, guiledep])
+  dependencies: [boostdep, msgpackdep, guiledep])
 
 test('basic', exe)
